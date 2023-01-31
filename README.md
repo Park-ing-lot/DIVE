@@ -38,25 +38,28 @@ Most of the code in this repo are copied/modified from [KM-BART](https://github.
     mv filtered_vcg/. visualcomet/
     ```
 
-4. Prepare training data
+4. Prepare training data.
     ```
     mkdir data/dive
     python -m scripts.prepare_vcg --output_dir data/dive --annot_dir data/visualcomet/ --data_dir data/vcr/vcr1images/
     ```
 
 ## Training
+1. Train DIVE.
     ```
     mkdir output
     python vcg_train_css.py --data_dir data/dive/ --checkpoint facebook/bart-base --validate_score --validate_loss --dropout 0.3 --batch_size 256 --lr 5e-5
     ```
 
 ## Generation
+1. Generation with counterfactual-aware inference generation.
     ```
     mkdir generated
     python vcg_generate_css_gt.py --do_sample --data_dir data/dive/ --output_file generated/dive --checkpoint {model path}
     ```
 
 ## Evalaution
+1. Evauation the generated infererences.
     ```
     python vcg_eval.py --generation generated/dive --reference data/dive/val_filtered_ref.json --annotation data/dive/train_ref.json
     ```
