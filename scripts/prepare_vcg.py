@@ -86,19 +86,12 @@ if __name__ == '__main__':
     # load annotations
     origin_val_annots = json.load(open(os.path.join(args.annot_dir, 'val_annots.json')))
 
-    # train_annots = json.load(open(os.path.join(args.annot_dir, 'train_annots.json')))
-    # train_annots = json.load(open(os.path.join(args.annot_dir, 'train_annots_random_filtered.json')))
-    train_annots = json.load(open(os.path.join(args.annot_dir, 'train_annots_freq.json')))
-    val_annots = json.load(open(os.path.join(args.annot_dir, 'val_annots_freq_sim_cst_1.json')))
+
+    train_annots = json.load(open(os.path.join(args.annot_dir, 'train_annots_filtered.json')))
+    val_annots = json.load(open(os.path.join(args.annot_dir, 'val_annots_filtered.json')))
     test_annots = json.load(open(os.path.join(args.annot_dir, 'test_annots.json')))
 
     split_dict = {'train': train_annots, 'val_filtered': val_annots, 'test': test_annots, 'val': origin_val_annots}
-
-    # make directory for splits
-    # for split in split_dict.keys():
-    #     path = os.path.join(args.output_dir, split)
-    #     if not os.path.isdir(path):
-    #         os.mkdir(path)
 
     # generate and save training data (event, task_type, etc.)
     # [{
@@ -110,8 +103,6 @@ if __name__ == '__main__':
         data = []
         for index, annot in enumerate(tqdm(annots)):
             data += get_text_data(annot=annot, index=index)
-        # if split == 'val_filtered':
-        #     split = split + '_filtered'
         json.dump(data, open(os.path.join(args.output_dir, split + '.json'), 'w'))
 
     # generate and save evaluation data (event, task_type, etc.)
@@ -124,8 +115,6 @@ if __name__ == '__main__':
         data = []
         for index, annot in enumerate(tqdm(annots)):
             data += get_eval_data(annot=annot, index=index)
-        # if split == 'val_filtered':
-        #     split = split + '_filtered'
         json.dump(data, open(os.path.join(args.output_dir, split + '_eval.json'), 'w'))
 
     # generate and save reference data
@@ -140,6 +129,4 @@ if __name__ == '__main__':
             data = []
             for index, annot in enumerate(tqdm(annots)):
                 data += get_reference_data(annot=annot)
-            # if split == 'val_filtered':
-            #     split = split + '_filtered'
             json.dump(data, open(os.path.join(args.output_dir, split + '_ref.json'), 'w'))

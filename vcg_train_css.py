@@ -285,9 +285,9 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     # required
-    parser.add_argument('--data_dir', default='data/kmbart-visualcomet/', type=str,
+    parser.add_argument('--data_dir', default='data/dive/', type=str,
                         help='path to load data, output_dir of prepare_vcg')
-    parser.add_argument('--checkpoint_dir', default='output/factual/', type=str,
+    parser.add_argument('--checkpoint_dir', default='output/', type=str,
                         help='where to save the checkpoint')
 
     # path
