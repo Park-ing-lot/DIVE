@@ -47,26 +47,26 @@ Most of the codes in this repo are copied/modified from [KM-BART](https://github
 1. Train DIVE.
     ```
     mkdir output
-    python vcg_train_css.py --data_dir data/dive/ --checkpoint facebook/bart-base --validate_score --validate_loss --dropout 0.3 --batch_size 256 --lr 5e-5
+    python vcg_train_crl.py --data_dir data/dive/ --checkpoint facebook/bart-base --validate_score --validate_loss --dropout 0.3 --batch_size 256 --lr 5e-5
     ```
 
 ## Generation
-1. Generation with counterfactual-aware inference generation.
+1. Generating inferences with nucleus sampling.
     ```
     mkdir generated
-    python vcg_generate_css_gt.py --do_sample --top_p 0.9 --num_beams 1 --data_dir data/dive/ --output_file generated/dive --checkpoint {model path}
+    python vcg_generate_gt.py --do_sample --top_p 0.9 --num_beams 1 --data_dir data/dive/ --output_file generated/dive --checkpoint {model path}
     ```
 
 ## Evaluation
 1. Evaluating the generated inferences.
     ```
-    python vcg_eval.py --generation generated/dive --reference data/dive/val_ref.json --annotation data/dive/train_ref.json
+    python vcg_eval.py --generation generated/dive --reference data/dive/val_ref.json --annotation data/visualcomet/train_annots.json
     ```
 2. Evaluating with a unique validation subset.
     ```
-    python vcg_eval.py --generation generated/dive --reference data/visualcomet/val_unique_ref.json --annotation data/dive/train_ref.json
+    python vcg_eval.py --generation generated/dive --reference data/visualcomet/val_unique_ref.json --annotation data/visualcomet/train_annots.json
     ```
 3. Evaluating with a novel validation subset.
     ```
-    python vcg_eval.py --generation generated/dive --reference data/visualcomet/val_novel_ref.json --annotation data/dive/train_ref.json
+    python vcg_eval.py --generation generated/dive --reference data/visualcomet/val_novel_ref.json --annotation data/visualcomet/train_annots.json
     ```
