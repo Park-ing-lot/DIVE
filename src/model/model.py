@@ -335,7 +335,7 @@ class MultiModalBartForConditionalGeneration(FromPretrainedMixin, GenerationMixi
         super().__init__(config)
         self.model = MultiModalBartModel(config)
         self.pooler = BartPooler(
-            config.d_model, config.d_model, config.classif_dropout,
+            config.d_model, config.d_model, 0.1,
         )
         self.register_buffer("final_logits_bias", torch.zeros((1, self.model.shared.num_embeddings)))
 
@@ -352,6 +352,7 @@ class MultiModalBartForConditionalGeneration(FromPretrainedMixin, GenerationMixi
             use_cache=None,
             output_attentions=None,
             output_hidden_states=None,
+            actual_batch_size=64,
             **unused,
     ):
         """
@@ -426,22 +427,34 @@ class MultiModalBartForConditionalGeneration(FromPretrainedMixin, GenerationMixi
         '''
 
         if (labels is not None) and output_hidden_states:
-            # pooled_last_enc = self.pooler(outputs[2].sum(dim=1))
+            image_len = [len(x)+3 for x in image_features]
+            for i, x in enumerate(attention_mask):
+                attention_mask[i][image_len[i]:] = attention_mask[i][image_len[i]:] * 0
+            
+            last_enc = outputs[2] * attention_mask.unsqueeze(-1)
+            last_dec = outputs[0] * decoder_attention_mask.unsqueeze(-1)
+
+            pooled_last_enc = self.pooler(last_enc.sum(dim=1))
+            pooled_last_enc = pooled_last_enc / attention_mask.sum(-1, keepdim=True)
+
+            pooled_last_dec = self.pooler(last_dec.sum(dim=1)) #+ pooled_last_enc
+            pooled_last_dec = pooled_last_dec / decoder_attention_mask.sum(-1, keepdim=True)
 
             # sequence_lengths = torch.ne(decoder_input_ids, 1).sum(-1) - 1
             # sentence_representation = outputs[0][range(decoder_input_ids.shape[0]), sequence_lengths]
             # pooled_last_dec = self.pooler(sentence_representation) + pooled_last_enc
-            
-            pooled_last_dec = self.pooler(outputs[0].sum(dim=1)) #+ pooled_last_enc
             # pooled_last_dec = self.pooler(outputs[0][:,0,:])
 
-            outputs = (lm_logits, pooled_last_dec,) + outputs[1:]
+            outputs = (lm_logits, pooled_last_dec,) + outputs[1:] + (pooled_last_enc,)
         else:
             outputs = (lm_logits,) + outputs[1:]  # Add cache, hidden states and attention if they are here
 
         if labels is not None:
             loss_fct = nn.CrossEntropyLoss()
-            lm_loss = loss_fct(lm_logits.view(-1, self.config.vocab_size), labels.view(-1))
+            if len(lm_logits) != actual_batch_size:
+                lm_loss = loss_fct(lm_logits[:actual_batch_size].view(-1, self.config.vocab_size), labels[:actual_batch_size].view(-1))
+            else:
+                lm_loss = loss_fct(lm_logits.view(-1, self.config.vocab_size), labels.view(-1))
             outputs = (lm_loss,) + outputs
 
         return outputs
