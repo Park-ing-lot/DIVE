@@ -22,8 +22,8 @@ class Collator:
             ap_enabled=False,
             mlm_probability=0.0,
             mrm_probability=0.0,
-            event_max_len=20,
-            lm_max_len=30,
+            event_max_len=50,
+            lm_max_len=50,
             max_img_num=30,
             max_rel_count=80
     ):
@@ -79,31 +79,60 @@ class Collator:
             in batch
         ]
 
-        img_num = [len(x) for x in image_features]
-        label_img_num = img_num if self._mrm_enabled else None
+        
         # take the first event_max_len words
         event = [self._clip_text(x['event'], self._event_max_len) if 'event' in x else '' for x in batch]
         place = [self._clip_text(x['place'], self._event_max_len) if 'place' in x else '' for x in batch]
+        # other_responses = [x['other_responses'] if 'other_responses' in x else '' for x in batch]
+        other_responses = None
         task_type = [x['task_type'] for x in batch]
         # take the first lm_max_len words
         target = [self._clip_text(x['labels'], self._lm_max_len) for x in batch] if self._has_label else None
-        mlm = list(target) if self._mlm_enabled else None
-        for i in range(len(batch)):
-            if batch[i]['task_type'] in ['before', 'after', 'intent'] and self._mlm_enabled:
-                mlm[i] = event[i]
-                event[i] = ''
 
         if 'names' in batch[0]:
             names = [x['names'] if 'names' in x else [] for x in batch]
         else:
             names = None
+
+        has_negative = []
+        mlm = list(target) if self._mlm_enabled else None
+        for i in range(len(batch)):
+            # if batch[i]['task_type'] in ['before', 'after', 'intent'] and self._mlm_enabled:
+            #     mlm[i] = event[i]
+            #     event[i] = ''
+            if 'negative_event' in batch[i].keys() and batch[i]['negative_event'] is not None:
+                # for dididid in range(len(batch[i]['negative_event'])):
+                #     event.append(self._clip_text(batch[i]['negative_event'][dididid], self._event_max_len))
+                #     place.append(self._clip_text(batch[i]['negative_place'][dididid], self._event_max_len))
+                #     task_type.append(batch[i]['negative_task_type'][dididid])
+                    
+                #     image_features.append(torch.from_numpy(batch[i]['negative_image_features'][dididid]))
+                #     names.append(batch[i]['negative_names'][dididid])
+                #     if self._has_label:
+                #         target.append(self._clip_text(batch[i]['negative_labels'][dididid], self._lm_max_len))
+
+                event.append(self._clip_text(batch[i]['negative_event'], self._event_max_len))
+                place.append(self._clip_text(batch[i]['negative_place'], self._event_max_len))
+                task_type.append(batch[i]['negative_task_type'])
+                
+                image_features.append(torch.from_numpy(batch[i]['negative_image_features']))
+                names.append(batch[i]['negative_names'])
+                if self._has_label:
+                    target.append(self._clip_text(batch[i]['negative_labels'], self._lm_max_len))
+                
+
+
+        img_num = [len(x) for x in image_features]
+        label_img_num = img_num if self._mrm_enabled else None
+        
         encoded_conditions = self._tokenizer.encode_condition(
             img_num=img_num,
             place=place, ###
             event=event,
             task_type=task_type,
             mlm=mlm,
-            names=names ### 
+            names=names, ###, 
+            other_responses=other_responses, ###
         )
 
         input_ids = encoded_conditions['input_ids']
@@ -127,6 +156,12 @@ class Collator:
             'index': [x['index'] if 'index' in x else None for x in batch],
             'task_type': [x['task_type'] for x in batch],
             'person_label': person_label,
+            'img_num' : img_num,
+            'place' : place,
+            'event' : event,
+            'names' : names,
+            'mlm' : mlm,
+            'task_type' : task_type,
         }
 
         condition_img_mask = encoded_conditions['img_mask']
