@@ -211,7 +211,7 @@ class ConditionTokenizer:
     def encode(self, *args, **kwargs):
         return self._base_tokenizer(*args, **kwargs)
 
-    def encode_condition(self, task_type, img_num=None, place=None, event=None, mlm=None, names=None):
+    def encode_condition(self, task_type, img_num=None, place=None, event=None, mlm=None, names=None, other_responses=None):
         """
         tokenize text, image features and event
         the output format (after decoded back):
@@ -298,6 +298,16 @@ class ConditionTokenizer:
 
             for index, value in enumerate(place):
                 text[index] += self.begin_place + value + self.end_place
+                # text[index] += self.begin_place + self.end_place
+
+        # build other_responses
+        # <caption> + other_responses <caption>
+        if other_responses is not None:
+            if not isinstance(other_responses, list):
+                other_responses = [other_responses]
+
+            for index, value in enumerate(other_responses):
+                text[index] += self.caption + value + self.caption
                 # text[index] += self.begin_place + self.end_place
 
         # build mlm
