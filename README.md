@@ -1,4 +1,4 @@
-# Deep DIVE into Visual Commonsense Generation: Diverse and Descriptive Reasoning about Stories
+# DIVE: Towards Descriptive and Diverse Visual Commonsense Generation
 This is the repository of DIVE.
 
 Most of the codes in this repo are copied/modified from [KM-BART](https://github.com/FomalhautB/KM-BART)
