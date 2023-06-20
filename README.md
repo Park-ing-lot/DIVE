@@ -31,11 +31,10 @@ Most of the code in this repo are copied/modified from [KM-BART](https://github.
     unzip vcr1images.zip
     ```
 
-3. Download the filtered annotations from [here](https://drive.google.com/file/d/1BiqbBRI3X2usf7bBWC-n1HMMqX-BvJCy/view?usp=sharing) and put them into 'data/visualcomet/'.
+3. unzip the filtered annotations and unique/novel reference file (for the validation) and put them into 'data/visualcomet/'.
     ```
-    cd data
     unzip filtered_vcg.zip
-    mv filtered_vcg/. visualcomet/
+    mv filtered_vcg/. data/visualcomet/
     ```
 
 4. Prepare training data.
