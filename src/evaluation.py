@@ -11,6 +11,7 @@ from pycocoevalcap.tokenizer.ptbtokenizer import PTBTokenizer
 from pycocoevalcap.bleu.bleu import Bleu
 from pycocoevalcap.meteor.meteor import Meteor
 from pycocoevalcap.cider.cider import Cider
+from pycocoevalcap.spice.spice import Spice
 
 
 # based on visual-comet
@@ -26,7 +27,8 @@ def compute_metric_inference(gens_list, refs_list, calculate_diversity=False, tr
     scorers = [
         (Bleu(4), ["BLEU1", "BLEU2", "BLEU3", "BLEU4"]),
         (Meteor(), "METEOR"),
-        (Cider(), "CIDEr")
+        (Cider(), "CIDEr"),
+        # (Spice(), "SPICE"),
     ]
     tokenizer = PTBTokenizer()
 
