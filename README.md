@@ -1,7 +1,7 @@
 # Deep DIVE into Visual Commonsense Generation: Diverse and Descriptive Reasoning about Stories
 This is the repository of DIVE.
 
-Most of the code in this repo are copied/modified from [KM-BART](https://github.com/FomalhautB/KM-BART)
+Most of the codes in this repo are copied/modified from [KM-BART](https://github.com/FomalhautB/KM-BART)
 
 
 ## Installation
@@ -15,7 +15,7 @@ Most of the code in this repo are copied/modified from [KM-BART](https://github.
     ```
     You can change your cuda or torch version.
 
-## Data preparation
+## Data Preparation
 
 ### Visual Commonsense Graphs
 1. Download the text data and visual features from [VisualCOMET](https://visualcomet.xyz) and decompose them into 'data'.
@@ -54,11 +54,19 @@ Most of the code in this repo are copied/modified from [KM-BART](https://github.
 1. Generation with counterfactual-aware inference generation.
     ```
     mkdir generated
-    python vcg_generate_css_gt.py --do_sample --data_dir data/dive/ --output_file generated/dive --checkpoint {model path}
+    python vcg_generate_css_gt.py --do_sample --top_p 0.9 --num_beams 1 --data_dir data/dive/ --output_file generated/dive --checkpoint {model path}
     ```
 
-## Evalaution
-1. Evauation the generated infererences.
+## Evaluation
+1. Evaluating the generated inferences.
     ```
-    python vcg_eval.py --generation generated/dive --reference data/dive/val_filtered_ref.json --annotation data/dive/train_ref.json
+    python vcg_eval.py --generation generated/dive --reference data/dive/val_ref.json --annotation data/dive/train_ref.json
+    ```
+2. Evaluating with a unique validation subset.
+    ```
+    python vcg_eval.py --generation generated/dive --reference data/visualcomet/val_unique_ref.json --annotation data/dive/train_ref.json
+    ```
+3. Evaluating with a novel validation subset.
+    ```
+    python vcg_eval.py --generation generated/dive --reference data/visualcomet/val_novel_ref.json --annotation data/dive/train_ref.json
     ```
