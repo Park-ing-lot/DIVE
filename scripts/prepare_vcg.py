@@ -88,10 +88,9 @@ if __name__ == '__main__':
 
 
     train_annots = json.load(open(os.path.join(args.annot_dir, 'train_annots_filtered.json')))
-    val_annots = json.load(open(os.path.join(args.annot_dir, 'val_annots_filtered.json')))
     test_annots = json.load(open(os.path.join(args.annot_dir, 'test_annots.json')))
 
-    split_dict = {'train': train_annots, 'val_filtered': val_annots, 'test': test_annots, 'val': origin_val_annots}
+    split_dict = {'train': train_annots, 'test': test_annots, 'val': origin_val_annots}
 
     # generate and save training data (event, task_type, etc.)
     # [{
