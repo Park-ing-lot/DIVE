@@ -313,7 +313,7 @@ def parse_args():
                         help='not to use image features')
 
     # training and evaluation
-    parser.add_argument('--epochs', default=20, type=int,
+    parser.add_argument('--epochs', default=40, type=int,
                         help='number of training epoch')
     parser.add_argument('--lr', default=5e-5, type=float,
                         help='learning rate')
