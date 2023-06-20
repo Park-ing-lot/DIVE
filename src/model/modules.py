@@ -21,6 +21,9 @@ class ImageEmbedding(nn.Module):
     def __init__(self, image_dim, final_dim):
         super(ImageEmbedding, self).__init__()
         self.linear = nn.Linear(image_dim, final_dim)
+        self.layernorm = nn.LayerNorm(final_dim)
+
+        self.dropout = nn.Dropout(0.1)
 
     def forward(self, image_features):
         img_len = list(map(len, image_features))
@@ -30,7 +33,9 @@ class ImageEmbedding(nn.Module):
         if len(non_empty_features) > 0:
             img_tensor = torch.cat(non_empty_features, dim=0)
             embedded = self.linear(img_tensor)
-
+            embedded = self.layernorm(embedded)
+            embedded = self.dropout(embedded)
+            
         output = []
         index = 0
         for l in img_len:
