@@ -17,7 +17,7 @@ from src.data.dataset import VCGDataset_gt as VCGDataset
 from src.data.tokenization import ConditionTokenizer
 from src.model.config import MultiModalBartConfig
 from src.model.model import MultiModalBartForConditionalGeneration
-from src.training_css import fine_tune
+from src.training_crl import fine_tune
 from src.utils import (
     Logger,
     save_training_data,
@@ -25,7 +25,7 @@ from src.utils import (
     setup_process,
     cleanup_process
 )
-from src.validation_css import validate_fine_tune_loss, validate_generation_score
+from src.validation import validate_fine_tune_loss, validate_generation_score
 
 
 random_seed = 42
@@ -106,7 +106,7 @@ def main(rank, args):
         torch.cuda.set_device(rank)
         model = DDP(model, device_ids=[rank], find_unused_parameters=True)
 
-    optimizer = AdamW(model.parameters(), lr=args.lr)#, weight_decay=0.01)
+    optimizer = AdamW(model.parameters(), lr=args.lr)#, weight_decay=0.01) ###
     scaler = GradScaler() if args.amp else None
 
     epoch = 0
@@ -129,9 +129,11 @@ def main(rank, args):
     train_dataset = VCGDataset(
         args.data_dir,
         split='train',
-        #image_dir='/mnt3/user16/KM-BART-ACL-CF/data/kmbart-visualcomet/',
         use_image=args.use_image,
-        use_event=args.use_event
+        use_event=args.use_event,
+        use_place=args.use_place,
+        pretrain=args.pretrain,
+        get_negative_sample=True
     )
 
     train_sampler = DistributedSampler(
@@ -154,9 +156,10 @@ def main(rank, args):
     val_dataset = VCGDataset(
         args.data_dir,
         split='val',
-        #image_dir='/mnt3/user16/KM-BART-ACL-CF/data/kmbart-visualcomet/',
         use_image=args.use_image,
-        use_event=args.use_event
+        use_event=args.use_event,
+        use_place=args.use_place,
+        pretrain=args.pretrain
     )
 
     val_loader = DataLoader(
@@ -169,26 +172,27 @@ def main(rank, args):
     )
 
     # validation set for generation
-    gen_dataset = VCGDataset(
-        args.data_dir,
-        split='val',
-        #image_dir='/mnt3/user16/KM-BART-ACL-CF/data/kmbart-visualcomet/',
-        use_image=args.use_image,
-        use_event=args.use_event,
-        eval_mode=True
-    )
+    if not args.pretrain:
+        gen_dataset = VCGDataset(
+            args.data_dir,
+            split='val',
+            use_image=args.use_image,
+            use_event=args.use_event,
+            use_place=args.use_place,
+            eval_mode=True,
+        )
 
-    gen_loader = DataLoader(
-        dataset=gen_dataset,
-        batch_size=args.batch_size,
-        shuffle=False,
-        num_workers=args.num_workers,
-        pin_memory=True,
-        collate_fn=collate_fn_gen
-    )
+        gen_loader = DataLoader(
+            dataset=gen_dataset,
+            batch_size=args.batch_size,
+            shuffle=False,
+            num_workers=args.num_workers,
+            pin_memory=True,
+            collate_fn=collate_fn_gen
+        )
 
-    val_ref = json.load(open(os.path.join(args.data_dir, 'val_filtered_ref.json'), 'r')) ###
- 
+    val_ref = json.load(open(os.path.join(args.data_dir, 'val_ref.json'), 'r')) ###
+
     # ========================== training ============================
 
     # generate test examples
@@ -224,7 +228,8 @@ def main(rank, args):
             log_interval=100,
             tb_writer=tb_writer,
             tb_interval=1,
-            scaler=scaler
+            scaler=scaler,
+            actual_batch_size=args.batch_size
         )
 
         # save checkpoint
@@ -244,26 +249,30 @@ def main(rank, args):
                         tb_writer=tb_writer
                     )
 
-            if args.validate_score:
-                validate_generation_score(
-                    epoch=epoch,
-                    model=model,
-                    gen_loader=gen_loader,
-                    reference=val_ref,
-                    tokenizer=tokenizer,
-                    device=device,
-                    args=args,
-                    logger=logger,
-                    log_interval=1,
-                    tb_writer=tb_writer,
-                )
+                if args.validate_score and not args.pretrain:
+                    generated = validate_generation_score(
+                        epoch=epoch,
+                        model=model,
+                        gen_loader=gen_loader,
+                        reference=val_ref,
+                        tokenizer=tokenizer,
+                        device=device,
+                        args=args,
+                        logger=logger,
+                        log_interval=1,
+                        tb_writer=tb_writer,
+                    )
 
             current_checkpoint_path = os.path.join(checkpoint_path, 'model{}'.format(epoch))
+
+            with open(current_checkpoint_path + '.json', 'w') as f:
+                json.dump(generated, f)
 
             if args.cpu:
                 model.save_pretrained(current_checkpoint_path)
             else:
                 model.module.save_pretrained(current_checkpoint_path)
+            
 
             save_training_data(
                 path=current_checkpoint_path,
@@ -280,7 +289,6 @@ def main(rank, args):
     if not args.cpu:
         cleanup_process()
 
-
 def parse_args():
     parser = argparse.ArgumentParser()
 
@@ -295,7 +303,7 @@ def parse_args():
                         help='path to output log files, not output to file if not specified')
     parser.add_argument('--model_config', default='config/vcg_base.json', type=str,
                         help='path to load model config')
-    parser.add_argument('--checkpoint', default=None, type=str,
+    parser.add_argument('--checkpoint', default='facebook/bart-base', type=str,
                         help='name or path to load weights')
 
     # model
@@ -305,14 +313,20 @@ def parse_args():
                         help='not to use image features')
 
     # training and evaluation
-    parser.add_argument('--epochs', default=40, type=int,
+    parser.add_argument('--epochs', default=20, type=int,
                         help='number of training epoch')
-    parser.add_argument('--lr', default=1e-5, type=float,
+    parser.add_argument('--lr', default=5e-5, type=float,
                         help='learning rate')
     parser.add_argument('--num_gen', default=5, type=int,
                         help='number of generated sentence on validation.')
     parser.add_argument('--num_beams', default=1, type=int,
                         help='level of beam search on validation')
+    parser.add_argument('--do_sample', action='store_true',
+                        help='use nucleus sample')
+    parser.add_argument('--top_p', default=0.9., type=float,
+                        help='top p for generation')
+    parser.add_argument('--top_k', default=0, type=int,
+                        help='top k for generation')
     parser.add_argument('--continue_training', action='store_true',
                         help='continue training, load optimizer and epoch from checkpoint')
     parser.add_argument('--validate_loss', action='store_true',
