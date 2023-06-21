@@ -44,8 +44,8 @@ def fine_tune(
                 answer_attention_mask=batch['answer_attention_mask'].to(
                     device) if 'answer_attention_mask' in batch else None,
                 output_hidden_states=True, ###
-                # actual_batch_size=actual_batch_size,
-                actual_batch_size=len(batch['input_ids']),
+                actual_batch_size=actual_batch_size,
+                # actual_batch_size=len(batch['input_ids']),
             )
             
             o_loss = outputs[0]
