@@ -261,40 +261,64 @@ class COCODataset_gt(Dataset):
                     tmp[inference] = [i]
                 else:
                     tmp[inference].append(i)
-
+            
             negative_dict = {}
             for key, value in tmp.items():
                 if not len(value) == 1:
                     negative_dict[key] = value
-
+            
+            ### Including generic inferences for CRL
             idx_dict = {}
             for i, data in enumerate(self._dataset):
                 index = data['index']
-                if inference_count[self.use_same_id(data['labels'])] != 1: continue
                 if index not in idx_dict.keys():
                     idx_dict[index] = [i]
                 else:
                     idx_dict[index].append(i)
     
             self.others_dict = {}
-
-            new_negative = {}
+            
             for key, value in negative_dict.items():
-                ndit_tmp = []
                 for i in value:
                     if i in self.others_dict.keys(): continue # 이미 있으면 패스. 완성된거니까
                     index = self._dataset[i]['index']
-                    if index not in idx_dict.keys(): continue # 하나의 샘플에 대해 unique가 없다면 패스
                     tmp = deepcopy(idx_dict[index])
                     if len(tmp) != 1:
                         if i in tmp:
                             tmp.remove(i)
                     self.others_dict[i] = tmp
-                    ndit_tmp.append(i)
-                if ndit_tmp != []:
-                    new_negative[key] = ndit_tmp
 
-            self.negative_dict = new_negative
+            self.negative_dict = negative_dict
+
+            ### Excluding generic inferences for CRL ###
+            # idx_dict = {}
+            # for i, data in enumerate(self._dataset):
+            #     index = data['index']
+            #     if inference_count[self.use_same_id(data['labels'])] != 1: continue
+            #     if index not in idx_dict.keys():
+            #         idx_dict[index] = [i]
+            #     else:
+            #         idx_dict[index].append(i)
+    
+            # self.others_dict = {}
+            
+            # new_negative = {}
+            # for key, value in negative_dict.items():
+            #     ndit_tmp = []
+            #     for i in value:
+            #         if i in self.others_dict.keys(): continue # 이미 있으면 패스. 완성된거니까
+            #         index = self._dataset[i]['index']
+            #         if index not in idx_dict.keys(): continue # 하나의 샘플에 대해 unique가 없다면 패스
+            #         tmp = deepcopy(idx_dict[index])
+            #         if len(tmp) != 1:
+            #             if i in tmp:
+            #                 tmp.remove(i)
+            #         self.others_dict[i] = tmp
+            #         ndit_tmp.append(i)
+            #     if ndit_tmp != []:
+            #         new_negative[key] = ndit_tmp
+
+            # self.negative_dict = new_negative
 
                 
         else:
