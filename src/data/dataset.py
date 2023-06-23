@@ -267,7 +267,7 @@ class COCODataset_gt(Dataset):
                 if not len(value) == 1:
                     negative_dict[key] = value
             
-            ### Including generic inferences for CRL
+            ### Including generic inferences for CRL ###
             idx_dict = {}
             for i, data in enumerate(self._dataset):
                 index = data['index']
