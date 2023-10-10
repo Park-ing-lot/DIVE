@@ -1,4 +1,4 @@
-# DIVE: Towards Descriptive and Diverse Visual Commonsense Generation
+# DIVE: Towards Descriptive and Diverse Visual Commonsense Generation [EMNLP 2023]
 This is the repository of DIVE [EMNLP 2023]
 
 Most of the codes in this repo are copied/modified from [KM-BART](https://github.com/FomalhautB/KM-BART)
