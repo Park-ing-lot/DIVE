@@ -7,7 +7,7 @@ Most of the codes in this repo are copied/modified from [KM-BART](https://github
 ## Installation
 1. Clone the repository recursively
     ```
-    git clone --recursive https://github.com/CallessCaller/DIVE.git
+    git clone --recursive https://github.com/Park-ing-lot/DIVE.git
     ```
 2. Install requirements
     ```
