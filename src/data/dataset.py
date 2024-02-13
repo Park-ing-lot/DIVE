@@ -81,18 +81,6 @@ class VCGDataset(COCODataset):
 
     def __getitem__(self, item):
         output = super(VCGDataset, self).__getitem__(item)
-
-        # ## 2022-09-25까지 사용
-        # person_in_event = re.findall("\d+", output['event']) # max 42
-        # tmp = []
-        # for e in output['event'].split():
-        #     if e in person_in_event:
-        #         if int(e) <= 42:
-        #             e = 'person ' + e
-        #     tmp.append(e)
-
-
-        # output['event'] = ' '.join(tmp)
         
         if not self._use_event:
             output['event'] = output['event'].split()[0]  # only show the target person
@@ -238,7 +226,7 @@ class COCODataset_gt(Dataset):
         self._data_dir = data_dir
         self._image_dir = data_dir if image_dir is None else image_dir
         self._split = split
-        self._vcr_dir = '/home/vcr/vcr1images/'
+        # self._vcr_dir = '/home/vcr/vcr1images/'
 
         file_name = split + ('_eval.json' if eval_mode else '.json')
         # file_name = split + ('_eval.json' if eval_mode else '_eval_label.json')
@@ -521,7 +509,7 @@ class COCODataset_gt_retrieval(Dataset):
         self._generations = generation # must be the generated data 
         self._image_dir = data_dir if image_dir is None else image_dir
         self._split = split
-        self._vcr_dir = '/home/vcr/vcr1images/'
+        # self._vcr_dir = '/home/vcr/vcr1images/'
         self.index = index
 
         file_name = split + ('_eval.json' if eval_mode else '.json')
