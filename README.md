@@ -47,7 +47,7 @@ Most of the codes in this repo are copied/modified from [KM-BART](https://github
 1. Train DIVE.
     ```
     mkdir output
-    python vcg_train_crl.py --data_dir data/dive/ --checkpoint facebook/bart-base --validate_score --validate_loss --dropout 0.3 --batch_size 256 --lr 5e-5
+    python vcg_train_crl.py --data_dir data/dive/ --checkpoint facebook/bart-base --validate_score --validate_loss --dropout 0.3 --batch_size 256 --lr 5e-5 --do_sample
     ```
 
 ## Generation
