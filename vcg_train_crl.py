@@ -323,10 +323,14 @@ def parse_args():
                         help='level of beam search on validation')
     parser.add_argument('--do_sample', action='store_true',
                         help='use nucleus sample')
-    parser.add_argument('--top_p', default=0.9., type=float,
+    parser.add_argument('--top_p', default=0.9, type=float,
                         help='top p for generation')
     parser.add_argument('--top_k', default=0, type=int,
                         help='top k for generation')
+    
+    parser.add_argument('--pretrain', action='store_true',
+                        help='pretrain the model (event reasoning)')
+    
     parser.add_argument('--continue_training', action='store_true',
                         help='continue training, load optimizer and epoch from checkpoint')
     parser.add_argument('--validate_loss', action='store_true',
